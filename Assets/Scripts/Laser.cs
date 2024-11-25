@@ -13,12 +13,10 @@ public class Laser : MonoBehaviour
 
     void Update()
     {
-        float length = 100;
-
+        float length = 100; 
         RaycastHit hit;
 
-        if(Physics.Raycast(transform.position, transform.forward, out hit, 100))
-        {
+        if(Physics.Raycast(transform.position, transform.forward, out hit, 100)){
             length = hit.distance;
         }
 

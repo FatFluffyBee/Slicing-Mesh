@@ -13,7 +13,7 @@ public static class MeshCuttingFunctions
     public enum MeshSide { Up = 1, Down = 0 };
     public static List<MeshData> CutMeshByPlane(Mesh oMesh, Plane plane, int submeshIndexCut)
     {
-        //Calculate subMeshses index
+        //Calculate subMeshes index
         int subMeshCount = (submeshIndexCut + 1 > oMesh.subMeshCount)? submeshIndexCut+1 : oMesh.subMeshCount;
         int[][] subMeshTriangles = new int [oMesh.subMeshCount][];
 
@@ -51,7 +51,7 @@ public static class MeshCuttingFunctions
                 MeshSide side2 = plane.GetSide(vertice2) ? MeshSide.Up : MeshSide.Down;
 
 
-                if (side0 == side1 && side1 == side2) // differentes valeurs d'intersection et vercies en fonction de la fa�on dont le plan traverse la face
+                if (side0 == side1 && side1 == side2) // 4 configurations possibles dependant de la façon dont le plan traverse ces points
                 {
                     AddTrianglesToMesh(ref meshesData, vertice0, uv0, vertice1, uv1, vertice2, uv2, side0, j, subMeshCount);
                 }
@@ -165,62 +165,51 @@ public static class MeshCuttingFunctions
         return Vector3.Cross(pointB - pointA, pointC - pointA).normalized;
     }
 
-    public static void AddTrianglesToMesh(ref List<List<MeshData>> meshesData, Vector3 pointA, Vector2 uv0, Vector3 pointB,
-    Vector2 uv1, Vector3 pointC, Vector2 uv2, MeshSide side, int subMeshIndex, int subMeshCount) // ajouter face à un MeshData 
+    //! hashset to check more efficitiently, takes up most of the performance and cause lag issue
+    public static void AddTrianglesToMesh(ref List<List<MeshData>> meshesData, Vector3 pointA, Vector2 uv0, Vector3 pointB, Vector2 uv1, Vector3 pointC, 
+    Vector2 uv2, MeshSide side, int subMeshIndex, int subMeshCount) // ajouter face à un MeshData 
     {
-        Debug.Log("Traingle getting checked");
+        Debug.Log("Triangle getting checked");
         int indexSide = Convert.ToInt32(side);
 
-        // On vérifie si le face en train d'être crée est relié à une géometrie existante (on compare les 3 pos avec les meshData existant)
-
+        // On vérifie si la face en train d'être créée est reliée à une géometrie existante (on compare les 3 pos avec les meshData existant)
         List<int> indexSeenInTab = new List<int>();
         int finalIndice = -1;
 
-        for(int i = 0; i < meshesData[indexSide].Count; i++) 
-        { 
-            for(int j = 0; j < meshesData[indexSide][i].vertices.Count; j++) 
-            {
+        for(int i = 0; i < meshesData[indexSide].Count; i++) { 
+            for(int j = 0; j < meshesData[indexSide][i].vertices.Count; j++) {
                 Vector3 currentVector = meshesData[indexSide][i].vertices[j];
 
-                if (currentVector == pointA || currentVector == pointB || currentVector == pointC)
-                {
+                if (currentVector == pointA || currentVector == pointB || currentVector == pointC) {
                     indexSeenInTab.Add(i);
                     break;
                 }
             }
         }
 
-        if(indexSeenInTab.Count == 1) //reliée à une seule liste, on ne fait rien
-        {
-            Debug.Log("Relié à une liste");
+        if(indexSeenInTab.Count == 1) { //reliée à une seule liste, on ne fait rien
+            Debug.Log("Link to only one mesh data");
             finalIndice = indexSeenInTab[0];
         }
-        else if(indexSeenInTab.Count > 1) // reliée à plusieurs liste, on concatène les listes en partant de la fin 
-        {
-            Debug.Log("Relié à plusieurs listes");
+        else if(indexSeenInTab.Count > 1) { // reliée à plusieurs liste, on concatène les listes en partant de la fin 
+            Debug.Log("Link to plural mesh data");
             int firstIndex = indexSeenInTab[0];
 
-            for (int i = indexSeenInTab.Count - 1; i > 0; i--) //on parcourt toutes les listes à relier entre elle en partant de la fin
-            {
+            for (int i = indexSeenInTab.Count - 1; i > 0; i--) {//on parcourt toutes les listes à relier entre elle en partant de la fin
                 int currentIndex = indexSeenInTab[i];
                 MeshData tmpCurrentMeshData = meshesData[indexSide][currentIndex];
-
                 int startVerticeNumber = meshesData[indexSide][firstIndex].vertices.Count;
 
-                foreach (Vector3 pos in tmpCurrentMeshData.vertices)
-                {
+                foreach (Vector3 pos in tmpCurrentMeshData.vertices){
                     meshesData[indexSide][firstIndex].vertices.Add(pos);
                 }
 
-                foreach (Vector2 uv in tmpCurrentMeshData.uvs)
-                {
+                foreach (Vector2 uv in tmpCurrentMeshData.uvs){
                     meshesData[indexSide][firstIndex].uvs.Add(uv);
                 }
 
-                for (int x = 0; x < tmpCurrentMeshData.subMeshes.Length; x++)
-                {
-                    foreach(int tri in tmpCurrentMeshData.subMeshes[x])
-                    {
+                for (int x = 0; x < tmpCurrentMeshData.subMeshes.Length; x++) {
+                    foreach(int tri in tmpCurrentMeshData.subMeshes[x]) {
                         meshesData[indexSide][firstIndex].subMeshes[x].Add(tri + startVerticeNumber);
                     }
                 }
@@ -230,13 +219,9 @@ public static class MeshCuttingFunctions
 
             finalIndice = indexSeenInTab[0];
         }
-        else // pas reliée à un MeshData existant, on crée un nouveau MeshData
-        {
-            Debug.Log("Relié à rien");
-            //Crée une nouvele liste 
-
+        else { // pas reliée à un MeshData existant, on crée un nouveau MeshData
+            Debug.Log("Not link to existing MeshData");
             meshesData[indexSide].Add(new MeshData(subMeshCount));
-
             finalIndice = meshesData[indexSide].Count - 1;
         }
 
@@ -251,25 +236,20 @@ public static class MeshCuttingFunctions
         meshesData[indexSide][finalIndice].vertices.Add(pointC);
         meshesData[indexSide][finalIndice].uvs.Add(uv2);
         meshesData[indexSide][finalIndice].subMeshes[subMeshIndex].Add(meshesData[indexSide][finalIndice].vertices.Count - 1);
-
-
     }
 
     public static void CalculateIntersectionPointAndUvs(out Vector3 interPoint, out Vector2 uvPoint, Plane plane, Vector3 pointA, Vector2 uvA, 
-    Vector3 pointB, Vector2 uvB)
-    {
+    Vector3 pointB, Vector2 uvB) {
         Ray ray = new Ray(pointA, pointB - pointA);
-        float distance;
 
-        plane.Raycast(ray, out distance);
+        plane.Raycast(ray, out float distance);
         float ratio = distance / Vector3.Distance(pointA, pointB);        
         
         interPoint = pointA + (pointB - pointA).normalized * distance;
         uvPoint = uvA + (uvB - uvA) * ratio;
     }
 
-    static public List<List<Vector3>> RegroupPointsByFace(List<Vector3> pointList) //sépare les points appartennant aux mêmes faces dans des liste séparées
-    {
+    static public List<List<Vector3>> RegroupPointsByFace(List<Vector3> pointList) {//sépare les points appartennant aux mêmes faces dans des liste séparées
         List<Vector3> pointListCopy = new List<Vector3>();
 
         foreach(Vector3 point in pointList)
@@ -289,15 +269,11 @@ public static class MeshCuttingFunctions
         pointListCopy.RemoveAt(0);
         count -= 2;
 
-        while (count > 0) 
-        {
+        while (count > 0) {
             bool endLine = true;
 
-            for(int i = 0; i < count-1; i+=2) 
-            {
-                //Debug.Log("Iterating");
-                if(pointA == pointListCopy[i] || pointA == pointListCopy[i+1] || pointB == pointListCopy[i] || pointB == pointListCopy[i+1])
-                {
+            for(int i = 0; i < count-1; i+=2) {
+                if(pointA == pointListCopy[i] || pointA == pointListCopy[i+1] || pointB == pointListCopy[i] || pointB == pointListCopy[i+1]){
                     pointsAlongPlaneConcave[currentIndex].Add(pointListCopy[i]);
                     pointsAlongPlaneConcave[currentIndex].Add(pointListCopy[i + 1]);
                     pointA = pointListCopy[i];
@@ -309,8 +285,7 @@ public static class MeshCuttingFunctions
                 }
             }
 
-            if (endLine)
-            {
+            if (endLine){
                 pointsAlongPlaneConcave.Add(new List<Vector3>());
                 currentIndex++;
                 pointsAlongPlaneConcave[currentIndex].Add(pointListCopy[0]);
@@ -326,9 +301,8 @@ public static class MeshCuttingFunctions
         return pointsAlongPlaneConcave;
     }
 
-    public static bool CompareVector(Vector3 pointA, Vector3 pointB, float roundingError)
-    {
-        return ((pointA - pointB).magnitude < roundingError);
+    public static bool CompareVector(Vector3 pointA, Vector3 pointB, float roundingError){
+        return (pointA - pointB).magnitude < roundingError;
     }
 }
 
@@ -346,15 +320,20 @@ public class MeshData
 
         subMeshes = new List<int>[subMeshCount];
 
-        for(int i = 0; i < subMeshCount; i++)
-        {
+        for(int i = 0; i < subMeshCount; i++){
             subMeshes[i] = new List<int>();
         }
     }
 }
 
+
+
+
+
+
+
 /*
- * public static class MeshCuttingFunctions 
+  public static class MeshCuttingFunctions 
 {
     public enum MeshSide { Up = 1, Down = 0 };
     const float roundingError = 0.000001f;
