@@ -1,9 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
+    static CuttingMeshManager cuttingMeshManager;
+
     public bool debug = false;
     public bool cutAllMesh = false;
 
@@ -17,6 +20,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void Start()
     {
+        cuttingMeshManager = FindObjectOfType<CuttingMeshManager>();
+
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
@@ -60,8 +65,12 @@ public class PlayerMovement : MonoBehaviour
                         hitMeshes.Add(hit);
                 }
             }
-
+            
             if (hitMeshes.Count > 0) {
+                List<Mesh> meshes = new List<Mesh>();
+                List<GameObject> originalMeshes = new List<GameObject>();
+                List<Plane> planes = new List<Plane>();
+
                 for(int i = 0; i < hitMeshes.Count; i++) {
                     Mesh mesh = hitMeshes[i].collider.GetComponent<MeshFilter>().mesh;
 
@@ -73,20 +82,23 @@ public class PlayerMovement : MonoBehaviour
 
                     Vector3 newPoint = hitMeshes[i].transform.InverseTransformPoint(hitMeshes[i].point);
 
-                    Plane newPlane = new Plane(newPlaneNormal, newPoint);
+                    Plane planeRelativeToMesh = new Plane(newPlaneNormal, newPoint);
+                    planes.Add(planeRelativeToMesh);
 
                     if(debug){
                         Debug.DrawLine(hitMeshes[i].point, hitMeshes[i].point + plane.normal * 15, Color.blue, 30f);
-                        Debug.DrawLine(newPoint, newPoint + newPlane.normal * 15, Color.green, 30f);
+                        Debug.DrawLine(newPoint, newPoint + planeRelativeToMesh.normal * 15, Color.green, 30f);
 
                         Debug.Log("Impact point : " + hitMeshes[i].point);
                         Debug.Log("Second point : " + newPoint);
                     }
 
-                    if(CuttingMeshTest.CutMesh(newPlane, mesh, hitMeshes[i].collider.gameObject)) { 
-                        Destroy(hitMeshes[i].collider.gameObject); 
-                    }
+                    meshes.Add(mesh);
+                    originalMeshes.Add(hitMeshes[i].collider.gameObject);
                 }
+
+                cuttingMeshManager.CutMesh(planes, meshes, originalMeshes);
+                //EditorApplication.isPaused = true;
             }
         }
     }
