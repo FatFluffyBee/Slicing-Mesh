@@ -23,17 +23,13 @@ public static class MeshCuttingFunctions
             subMeshTriangles[i] = initMesh.subMeshes[i].ToArray();
         }
 
-        List<List<MeshData>> meshesData = new List<List<MeshData>>() { new List<MeshData>(), new List<MeshData>() };
+        List<MeshData> twoCutMeshesData = new List<MeshData>() { new MeshData(subMeshCount), new MeshData(subMeshCount)};
         List<Vector3> pointsAlongPlane = new List<Vector3>();
         List<Vector2> uvPointAlongPlane = new List<Vector2>();
         
         // True = top, false = bottom
         Vector3[] oVertices = initMesh.vertices.ToArray();
         List<Vector2> oUvs = initMesh.uvs;
-
-        for(int i = 0; i < oVertices.Length; i++) {
-            Debug.Log(oVertices[i] + " Uvs : " + oUvs[i]); 
-        }
 
         for(int j = 0; j < subMeshTriangles.Length; j++) {
             int[] oTriangles = subMeshTriangles[j];
@@ -54,16 +50,16 @@ public static class MeshCuttingFunctions
                 MeshSide side2 = plane.GetSide(vertice2) ? MeshSide.Up : MeshSide.Down;
 
                 if (side0 == side1 && side1 == side2) {// 4 configurations possibles dependant de la façon dont le plan traverse ces points
-                    AddTrianglesToMesh(ref meshesData, vertice0, uv0, vertice1, uv1, vertice2, uv2, side0, j, subMeshCount);
+                    AddTrianglesToMesh(ref twoCutMeshesData, vertice0, uv0, vertice1, uv1, vertice2, uv2, side0, j, subMeshCount);
                 }
 
                 else if (side1 == side2) {
                     CalculateIntersectionPointAndUvs(out Vector3 interA, out Vector2 uvA, plane, vertice0, uv0, vertice1, uv1);
                     CalculateIntersectionPointAndUvs(out Vector3 interB, out Vector2 uvB, plane, vertice0, uv0, vertice2, uv2);
 
-                    AddTrianglesToMesh(ref meshesData, vertice0, uv0, interA, uvA, interB, uvB, side0, j, subMeshCount);
-                    AddTrianglesToMesh(ref meshesData, interA, uvA, vertice1, uv1, vertice2, uv2, side1, j, subMeshCount);
-                    AddTrianglesToMesh(ref meshesData, vertice2, uv2, interB, uvB, interA, uvA, side1, j, subMeshCount);
+                    AddTrianglesToMesh(ref twoCutMeshesData, vertice0, uv0, interA, uvA, interB, uvB, side0, j, subMeshCount);
+                    AddTrianglesToMesh(ref twoCutMeshesData, interA, uvA, vertice1, uv1, vertice2, uv2, side1, j, subMeshCount);
+                    AddTrianglesToMesh(ref twoCutMeshesData, vertice2, uv2, interB, uvB, interA, uvA, side1, j, subMeshCount);
 
                     pointsAlongPlane.Add(interA);
                     pointsAlongPlane.Add(interB);
@@ -74,9 +70,9 @@ public static class MeshCuttingFunctions
                     CalculateIntersectionPointAndUvs(out Vector3 interA, out Vector2 uvA, plane, vertice0, uv0, vertice1, uv1);
                     CalculateIntersectionPointAndUvs(out Vector3 interB, out Vector2 uvB, plane, vertice1, uv1, vertice2, uv2);
 
-                    AddTrianglesToMesh(ref meshesData, vertice0, uv0, interA, uvA, vertice2, uv2, side0, j, subMeshCount);
-                    AddTrianglesToMesh(ref meshesData, vertice2, uv2, interA, uvA, interB, uvB, side0, j, subMeshCount);
-                    AddTrianglesToMesh(ref meshesData, vertice1, uv1, interB, uvB, interA, uvA, side1, j, subMeshCount);
+                    AddTrianglesToMesh(ref twoCutMeshesData, vertice0, uv0, interA, uvA, vertice2, uv2, side0, j, subMeshCount);
+                    AddTrianglesToMesh(ref twoCutMeshesData, vertice2, uv2, interA, uvA, interB, uvB, side0, j, subMeshCount);
+                    AddTrianglesToMesh(ref twoCutMeshesData, vertice1, uv1, interB, uvB, interA, uvA, side1, j, subMeshCount);
 
                     pointsAlongPlane.Add(interA);
                     pointsAlongPlane.Add(interB);
@@ -87,9 +83,9 @@ public static class MeshCuttingFunctions
                     CalculateIntersectionPointAndUvs(out Vector3 interA, out Vector2 uvA, plane, vertice1, uv1, vertice2, uv2);
                     CalculateIntersectionPointAndUvs(out Vector3 interB, out Vector2 uvB, plane, vertice0, uv0, vertice2, uv2);
 
-                    AddTrianglesToMesh(ref meshesData, vertice0, uv0, vertice1, uv1, interB, uvB, side0, j, subMeshCount);
-                    AddTrianglesToMesh(ref meshesData, vertice1, uv1, interA, uvA, interB, uvB, side0, j, subMeshCount);
-                    AddTrianglesToMesh(ref meshesData, vertice2, uv2, interB, uvB, interA, uvA, side2, j, subMeshCount);
+                    AddTrianglesToMesh(ref twoCutMeshesData, vertice0, uv0, vertice1, uv1, interB, uvB, side0, j, subMeshCount);
+                    AddTrianglesToMesh(ref twoCutMeshesData, vertice1, uv1, interA, uvA, interB, uvB, side0, j, subMeshCount);
+                    AddTrianglesToMesh(ref twoCutMeshesData, vertice2, uv2, interB, uvB, interA, uvA, side2, j, subMeshCount);
 
                     pointsAlongPlane.Add(interA);
                     pointsAlongPlane.Add(interB);
@@ -98,7 +94,7 @@ public static class MeshCuttingFunctions
                 }
             }
         }
-
+            
         /// Separare the list of all point of cut edge into their respective face group, if there is multiple different face group, AKA the mesh is not simple -> (  ) () 
         List<List<Vector3>> verticesAlongPlaneConcave = RegroupPointsByFace(pointsAlongPlane, uvPointAlongPlane, out List<List<Vector2>> uvPointsAlongPlaneConcave);
 
@@ -114,29 +110,35 @@ public static class MeshCuttingFunctions
             }
             faceCenter /= pointsAlongPlane.Count;
 
+            //todo map the uvcoordinates to a plane representation, all of them btw maybe not individual face by individual face
             Vector2 uvFaceCenter = Vector2.zero;
             for (int i = 0; i < uvPointAlongPlane.Count; i++){
                 uvFaceCenter += uvPointAlongPlane[i];
             }
             uvFaceCenter /= uvPointAlongPlane.Count;
 
-            //Create face for each mesh for each pair of point //! uv are wrong cause it no longer follows the same as f
+            //Create face for each mesh for each pair of point 
             for (int i = 0; i < pointsAlongPlane.Count; i += 2){
                 Vector3 normalFace = ComputeNormal(faceCenter, pointsAlongPlane[i], pointsAlongPlane[i + 1]);
                 float direction = Vector3.Dot(normalFace, plane.normal); // return -1 if object is behing if not 1
                 if (direction > 0) {
-                    AddTrianglesToMesh(ref meshesData, faceCenter, uvFaceCenter, pointsAlongPlane[i], uvPointAlongPlane[i], pointsAlongPlane[i + 1], uvPointAlongPlane[i + 1], MeshSide.Down, submeshIndexCut, subMeshCount);
-                    AddTrianglesToMesh(ref meshesData, faceCenter, uvFaceCenter, pointsAlongPlane[i + 1], uvPointAlongPlane[i + 1], pointsAlongPlane[i], uvPointAlongPlane[i], MeshSide.Up, submeshIndexCut, subMeshCount);
+                    AddTrianglesToMesh(ref twoCutMeshesData, faceCenter, uvFaceCenter, pointsAlongPlane[i], uvPointAlongPlane[i], pointsAlongPlane[i + 1], uvPointAlongPlane[i + 1], MeshSide.Down, submeshIndexCut, subMeshCount);
+                    AddTrianglesToMesh(ref twoCutMeshesData, faceCenter, uvFaceCenter, pointsAlongPlane[i + 1], uvPointAlongPlane[i + 1], pointsAlongPlane[i], uvPointAlongPlane[i], MeshSide.Up, submeshIndexCut, subMeshCount);
                 } else {
-                    AddTrianglesToMesh(ref meshesData, faceCenter, uvFaceCenter, pointsAlongPlane[i], uvPointAlongPlane[i], pointsAlongPlane[i + 1], uvPointAlongPlane[i + 1], MeshSide.Up, submeshIndexCut, subMeshCount);
-                    AddTrianglesToMesh(ref meshesData, faceCenter, uvFaceCenter, pointsAlongPlane[i + 1], uvPointAlongPlane[i + 1], pointsAlongPlane[i], uvPointAlongPlane[i], MeshSide.Down, submeshIndexCut, subMeshCount);
+                    AddTrianglesToMesh(ref twoCutMeshesData, faceCenter, uvFaceCenter, pointsAlongPlane[i], uvPointAlongPlane[i], pointsAlongPlane[i + 1], uvPointAlongPlane[i + 1], MeshSide.Up, submeshIndexCut, subMeshCount);
+                    AddTrianglesToMesh(ref twoCutMeshesData, faceCenter, uvFaceCenter, pointsAlongPlane[i + 1], uvPointAlongPlane[i + 1], pointsAlongPlane[i], uvPointAlongPlane[i], MeshSide.Down, submeshIndexCut, subMeshCount);
                 }
             }
         }
 
+        List<List<MeshData>> allSeparatedMeshData = new List<List<MeshData>>() {};
+        foreach(MeshData meshData in twoCutMeshesData) {
+            allSeparatedMeshData.Add(SeparateMeshDataByLinkedTriangles(meshData)); 
+        }
+
         List<MeshData> finalMeshList = new List<MeshData>();
 
-        foreach(List<MeshData> list in meshesData) { 
+        foreach(List<MeshData> list in allSeparatedMeshData) { 
             foreach(MeshData meshData in list) {
                 finalMeshList.Add(meshData);
             }
@@ -152,107 +154,132 @@ public static class MeshCuttingFunctions
         return Vector3.Cross(pointB - pointA, pointC - pointA).normalized;
     }
 
-    public static void AddTrianglesToMesh(ref List<List<MeshData>> meshesData, Vector3 pointA, Vector2 uv0, Vector3 pointB, Vector2 uv1, Vector3 pointC, 
+    public static List<MeshData> SeparateMeshDataByLinkedTriangles(MeshData meshData) //separate each mesh data into differents island depending on connectivity
+    {
+        List<MeshData> separatedMeshData = new List<MeshData>();
+        int subMeshCount = meshData.subMeshes.Length;
+
+        //Iterate for every set of triangles in meshData and add it to a new list of mesh data if linked to triangles in the list. If not create a new one. 
+        //If present in more than one combine the list
+        for(int i = 0; i < subMeshCount; i++) 
+            for(int j = 0; j < meshData.subMeshes[i].Count; j+=3) {
+                //get all three points of the triangles
+                Vector3 pointA = meshData.vertices[meshData.subMeshes[i][j]];
+                Vector3 pointB = meshData.vertices[meshData.subMeshes[i][j+1]];
+                Vector3 pointC = meshData.vertices[meshData.subMeshes[i][j+2]];
+
+                List<int> indicesSeenInTab = new List<int>();
+                int finalIndice = -1;
+
+                for(int x = 0; x < separatedMeshData.Count; x++) { //we check all the meshes data already created to see if the current triangle is linked to existing vertices
+                    int indexA = separatedMeshData[x].vertices.IndexOf(pointA);
+                    int indexB = separatedMeshData[x].vertices.IndexOf(pointB);
+                    int indexC = separatedMeshData[x].vertices.IndexOf(pointC);
+
+                    if(indexA != -1 || indexB != -1 || indexC != -1) {
+                        indicesSeenInTab.Add(x);
+                    }
+                }
+        
+                if(indicesSeenInTab.Count == 1) { //reliée à une seule liste, on ne fait rien
+                    finalIndice = indicesSeenInTab[0];
+                } else if(indicesSeenInTab.Count > 1) { // reliée à plusieurs liste, on concatène les listes en partant de la fin 
+                    int firstIndex = indicesSeenInTab[0];
+
+                    for (int x = indicesSeenInTab.Count - 1; x > 0; x--) {//on parcourt toutes les listes à relier entre elle en partant de la fin
+                        int currentIndex = indicesSeenInTab[x];
+                        MeshData tmpCurrentMeshData = separatedMeshData[currentIndex];
+                        int startVerticeNumber = separatedMeshData[firstIndex].vertices.Count;
+
+                        foreach (Vector3 pos in tmpCurrentMeshData.vertices){
+                            separatedMeshData[firstIndex].vertices.Add(pos);
+                        }
+
+                        foreach (Vector2 uv in tmpCurrentMeshData.uvs){
+                            separatedMeshData[firstIndex].uvs.Add(uv);
+                        }
+
+                        for (int y = 0; y < tmpCurrentMeshData.subMeshes.Length; y++) {
+                            foreach(int tri in tmpCurrentMeshData.subMeshes[y]) {
+                                separatedMeshData[firstIndex].subMeshes[y].Add(tri + startVerticeNumber); //add to existing triangle without breaking continuity
+                            }
+                        }
+                        separatedMeshData.RemoveAt(currentIndex);
+                    }
+                    finalIndice = indicesSeenInTab[0];
+                }
+                else { // not linked to an existing meshdata so we create a new ones
+                    separatedMeshData.Add(new MeshData(subMeshCount));
+                    finalIndice = separatedMeshData.Count - 1;
+                }
+
+                int triIndexA = meshData.subMeshes[i][j];
+                int triIndexB = meshData.subMeshes[i][j+1];
+                int triIndexC = meshData.subMeshes[i][j+2];
+                int lastTriangleIndex = separatedMeshData[finalIndice].vertices.Count;
+
+                separatedMeshData[finalIndice].vertices.Add(pointA);
+                separatedMeshData[finalIndice].vertices.Add(pointB);
+                separatedMeshData[finalIndice].vertices.Add(pointC);
+
+                separatedMeshData[finalIndice].uvs.Add(meshData.uvs[triIndexA]);
+                separatedMeshData[finalIndice].uvs.Add(meshData.uvs[triIndexB]);
+                separatedMeshData[finalIndice].uvs.Add(meshData.uvs[triIndexC]);
+
+                separatedMeshData[finalIndice].subMeshes[i].Add(lastTriangleIndex);
+                separatedMeshData[finalIndice].subMeshes[i].Add(lastTriangleIndex+1);
+                separatedMeshData[finalIndice].subMeshes[i].Add(lastTriangleIndex+2);
+        }
+
+        return separatedMeshData;
+    }
+    public static void AddTrianglesToMesh(ref List<MeshData> finalMeshesData, Vector3 pointA, Vector2 uv0, Vector3 pointB, Vector2 uv1, Vector3 pointC, 
     Vector2 uv2, MeshSide side, int subMeshIndex, int subMeshCount) // ajouter face à un MeshData 
     {
         int indexSide = Convert.ToInt32(side);
-
-        // We verify if the added triangle is linked to already processed triangles, it serves the purpose to create as many separate meshes as the cut created and not 
-        // only two meshes along the cut
-        List<int> indexSeenInTab = new List<int>();
-        int finalIndice = -1;
-
-        //! prob most expensive part is iterating through every list and checking every vertices so its exponentially costly as the number of vertices grow
-        //! maybe just add the triangles relative to what we thought will still separating betweenside and submesh then we process all the faces data at once?
-        for(int i = 0; i < meshesData[indexSide].Count; i++) { //we check all the meshes data already created to see if the current triangle is linked to existing vertices
-            for(int j = 0; j < meshesData[indexSide][i].vertices.Count; j++) {
-                Vector3 currentVector = meshesData[indexSide][i].vertices[j];
-
-                if (currentVector == pointA || currentVector == pointB || currentVector == pointC) {
-                    indexSeenInTab.Add(i);
-                    break;
-                }
-            }
-        }
-
-        if(indexSeenInTab.Count == 1) { //reliée à une seule liste, on ne fait rien
-            finalIndice = indexSeenInTab[0];
-        } else if(indexSeenInTab.Count > 1) { // reliée à plusieurs liste, on concatène les listes en partant de la fin 
-            int firstIndex = indexSeenInTab[0];
-
-            for (int i = indexSeenInTab.Count - 1; i > 0; i--) {//on parcourt toutes les listes à relier entre elle en partant de la fin
-                int currentIndex = indexSeenInTab[i];
-                MeshData tmpCurrentMeshData = meshesData[indexSide][currentIndex];
-                int startVerticeNumber = meshesData[indexSide][firstIndex].vertices.Count;
-
-                foreach (Vector3 pos in tmpCurrentMeshData.vertices){
-                    meshesData[indexSide][firstIndex].vertices.Add(pos);
-                }
-
-                foreach (Vector2 uv in tmpCurrentMeshData.uvs){
-                    meshesData[indexSide][firstIndex].uvs.Add(uv);
-                }
-
-                for (int x = 0; x < tmpCurrentMeshData.subMeshes.Length; x++) {
-                    foreach(int tri in tmpCurrentMeshData.subMeshes[x]) {
-                        meshesData[indexSide][firstIndex].subMeshes[x].Add(tri + startVerticeNumber);
-                    }
-                }
-
-                meshesData[indexSide].RemoveAt(currentIndex);
-            }
-
-            finalIndice = indexSeenInTab[0];
-        }
-        else { // not linked to an existing meshdata so we create a new ones
-            meshesData[indexSide].Add(new MeshData(subMeshCount));
-            finalIndice = meshesData[indexSide].Count - 1;
-        }
-
-
         //todo here is a good place to remove flat shading and potential performance issues due to vertex duplication
-        if(false) {
-            int indexA = meshesData[indexSide][finalIndice].vertices.IndexOf(pointA);
+        /*if(false) {
+            int indexA = finalMeshesData.vertices.IndexOf(pointA);
             if(indexA == -1) {
-                meshesData[indexSide][finalIndice].vertices.Add(pointA);
-                meshesData[indexSide][finalIndice].uvs.Add(uv0);
-                meshesData[indexSide][finalIndice].subMeshes[subMeshIndex].Add(meshesData[indexSide][finalIndice].vertices.Count -1);
+                finalMeshesData.vertices.Add(pointA);
+                finalMeshesData.uvs.Add(uv0);
+                finalMeshesData.subMeshes[subMeshIndex].Add(finalMeshesData.vertices.Count -1);
             } else {
-                meshesData[indexSide][finalIndice].subMeshes[subMeshIndex].Add(indexA);
+                finalMeshesData.subMeshes[subMeshIndex].Add(indexA);
             }
 
-            int indexB = meshesData[indexSide][finalIndice].vertices.IndexOf(pointB);
+            int indexB = finalMeshesData.vertices.IndexOf(pointB);
             if(indexB == -1) {
-                meshesData[indexSide][finalIndice].vertices.Add(pointB);
-                meshesData[indexSide][finalIndice].uvs.Add(uv1);
-                meshesData[indexSide][finalIndice].subMeshes[subMeshIndex].Add(meshesData[indexSide][finalIndice].vertices.Count -1);
+                finalMeshesData.vertices.Add(pointB);
+                finalMeshesData.uvs.Add(uv1);
+                finalMeshesData.subMeshes[subMeshIndex].Add(finalMeshesData.vertices.Count -1);
             } else {
-                meshesData[indexSide][finalIndice].subMeshes[subMeshIndex].Add(indexB);
+                finalMeshesData.subMeshes[subMeshIndex].Add(indexB);
             }
 
-            int indexC = meshesData[indexSide][finalIndice].vertices.IndexOf(pointC);
+            int indexC = finalMeshesData.vertices.IndexOf(pointC);
             if(indexC == -1) {
-                meshesData[indexSide][finalIndice].vertices.Add(pointC);
-                meshesData[indexSide][finalIndice].uvs.Add(uv2);
-                meshesData[indexSide][finalIndice].subMeshes[subMeshIndex].Add(meshesData[indexSide][finalIndice].vertices.Count -1);
+                finalMeshesData.vertices.Add(pointC);
+                finalMeshesData.uvs.Add(uv2);
+                finalMeshesData.subMeshes[subMeshIndex].Add(finalMeshesData.vertices.Count -1);
             } else {
-                meshesData[indexSide][finalIndice].subMeshes[subMeshIndex].Add(indexC);
+                finalMeshesData.subMeshes[subMeshIndex].Add(indexC);
             }
-        } else {
-            int subMeshTriangleIndex = meshesData[indexSide][finalIndice].vertices.Count;
+        } else {*/
+            int subMeshTriangleIndex = finalMeshesData[indexSide].vertices.Count;
 
-            meshesData[indexSide][finalIndice].vertices.Add(pointA);
-            meshesData[indexSide][finalIndice].uvs.Add(uv0);
-            meshesData[indexSide][finalIndice].subMeshes[subMeshIndex].Add(subMeshTriangleIndex);
+            finalMeshesData[indexSide].vertices.Add(pointA);
+            finalMeshesData[indexSide].uvs.Add(uv0);
+            finalMeshesData[indexSide].subMeshes[subMeshIndex].Add(subMeshTriangleIndex);
 
-            meshesData[indexSide][finalIndice].vertices.Add(pointB);
-            meshesData[indexSide][finalIndice].uvs.Add(uv1);
-            meshesData[indexSide][finalIndice].subMeshes[subMeshIndex].Add(subMeshTriangleIndex + 1);
+            finalMeshesData[indexSide].vertices.Add(pointB);
+            finalMeshesData[indexSide].uvs.Add(uv1);
+            finalMeshesData[indexSide].subMeshes[subMeshIndex].Add(subMeshTriangleIndex + 1);
 
-            meshesData[indexSide][finalIndice].vertices.Add(pointC);
-            meshesData[indexSide][finalIndice].uvs.Add(uv2);
-            meshesData[indexSide][finalIndice].subMeshes[subMeshIndex].Add(subMeshTriangleIndex + 2);
-        }
+            finalMeshesData[indexSide].vertices.Add(pointC);
+            finalMeshesData[indexSide].uvs.Add(uv2);
+            finalMeshesData[indexSide].subMeshes[subMeshIndex].Add(subMeshTriangleIndex + 2);
+        //}
     }
 
     public static void CalculateIntersectionPointAndUvs(out Vector3 interPoint, out Vector2 uvPoint, Plane plane, Vector3 pointA, Vector2 uvA, 

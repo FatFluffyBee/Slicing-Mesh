@@ -302,7 +302,7 @@ GameObject:
   - component: {fileID: 130187894}
   m_Layer: 0
   m_Name: Dragon
-  m_TagString: Untagged
+  m_TagString: Cuttable
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -822,7 +822,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isFirstCut: 1
-  matCut: {fileID: 2100000, guid: 9d5069c508d98ec4a8b8c6de7c12c990, type: 2}
+  matCut: {fileID: -876546973899608171, guid: 728865936f22da24f9e67fcc82d79533, type: 3}
   index: -1
 --- !u!54 &928562518
 Rigidbody:
@@ -892,7 +892,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 6d01234c7bde3a34686a0b5bdd2e01f5, type: 2}
+  - {fileID: -876546973899608171, guid: 728865936f22da24f9e67fcc82d79533, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1314,7 +1314,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: d47062e36783a98469fd8716eaf621cc, type: 2}
+  - {fileID: 2100000, guid: a60d9c6ec33266946b8a1f75ac53e944, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1478,7 +1478,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: e18de465c29f6fd4993babe092d60cb2, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
