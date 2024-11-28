@@ -30,6 +30,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        //Movement related
         float inputX = Input.GetAxis("Horizontal");
         float inputY = Input.GetAxis("Vertical");
 
@@ -38,12 +39,14 @@ public class PlayerMovement : MonoBehaviour
 
         rb.velocity = newVelocity;
 
+        //Camera and Input related
         float mouseX = Input.GetAxis("Mouse X");
         float mouseY = Input.GetAxis("Mouse Y");
 
         transform.Rotate(Vector3.up * mouseX * camSensitivity, Space.World);
         camera.Rotate(Vector3.left * mouseY * camSensitivity, Space.Self);
 
+        //Laser related
         if (Input.GetMouseButton(1)){
             aimer.transform.Rotate(Vector3.forward * laserSpeed * Time.deltaTime, Space.Self);
         }
@@ -57,8 +60,7 @@ public class PlayerMovement : MonoBehaviour
                     if(hit.collider?.tag == "Cuttable")
                         hitMeshes.Add(hit);
                 }
-            }
-            else {
+            } else {
                 RaycastHit hit;
                 if(Physics.Raycast(aimer.position, aimer.forward, out hit)) {
                     if (hit.collider?.tag == "Cuttable")

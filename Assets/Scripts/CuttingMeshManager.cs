@@ -22,7 +22,6 @@ public class CuttingMeshManager : MonoBehaviour
     void Update() 
     {
         if(remainingProcess == 0 && allMeshesData.Count > 0) {
-            Debug.LogWarning("Updating mesh with sliced one");
             UpdateSliceMeshed();
         }
     }
@@ -75,7 +74,7 @@ public class CuttingMeshManager : MonoBehaviour
         return true;
     }
 
-    void UpdateSliceMeshed() {
+    void UpdateSliceMeshed() { //! jitter when too many mesh are replaced at once, maybe wait that all mesh are created then activate all of them at once instead of one by one
         for(int i = 0; i < allMeshesData.Count; i++) {
             for(int j = 0; j < allMeshesData[i].Count; j++) {
                 Transform ogTransform = originalGO[i].transform;
@@ -112,7 +111,6 @@ public class CuttingMeshManager : MonoBehaviour
                 newIsCut.matCut = isCuttables[i].matCut;
                 newIsCut.isFirstCut = false;
                 newIsCut.index = isCuttables[i].index;
-                
             }
             //Destroy old mesh
             Destroy(originalGO[i]);
