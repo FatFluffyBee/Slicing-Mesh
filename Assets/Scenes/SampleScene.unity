@@ -306,7 +306,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &130187894
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -822,7 +822,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isFirstCut: 1
-  matCut: {fileID: -876546973899608171, guid: 728865936f22da24f9e67fcc82d79533, type: 3}
+  matCut: {fileID: 2100000, guid: 9d5069c508d98ec4a8b8c6de7c12c990, type: 2}
   index: -1
 --- !u!54 &928562518
 Rigidbody:
@@ -892,7 +892,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -876546973899608171, guid: 728865936f22da24f9e67fcc82d79533, type: 3}
+  - {fileID: 2100000, guid: 6d01234c7bde3a34686a0b5bdd2e01f5, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
