@@ -51,9 +51,7 @@ public static class MeshCuttingFunctions
 
                 if (side0 == side1 && side1 == side2) {// 4 configurations possibles dependant de la façon dont le plan traverse ces points
                     AddTrianglesToMesh(ref twoCutMeshesData, vertice0, uv0, vertice1, uv1, vertice2, uv2, side0, j, subMeshCount);
-                }
-
-                else if (side1 == side2) {
+                } else if (side1 == side2) {
                     CalculateIntersectionPointAndUvs(out Vector3 interA, out Vector2 uvA, plane, vertice0, uv0, vertice1, uv1);
                     CalculateIntersectionPointAndUvs(out Vector3 interB, out Vector2 uvB, plane, vertice0, uv0, vertice2, uv2);
 
@@ -147,13 +145,11 @@ public static class MeshCuttingFunctions
         return finalMeshList;
     }      
 
-   public static List<Vector2> ProjectPointsOntoPlane(Plane plane, List<Vector3> points)
-    {
+    static List<Vector2> ProjectVerticesOntoPlane(Plane plane, List<Vector3> vertices) {
         List<Vector2> projectedPoints = new List<Vector2>();
         Vector3 planeNormal = plane.normal;
 
-        foreach (Vector3 point in points)
-        {
+        foreach (Vector3 point in vertices) {
             float distance = plane.GetDistanceToPoint(point);
             Vector2 projection = point - distance * planeNormal;
             projectedPoints.Add(projection);
@@ -164,7 +160,7 @@ public static class MeshCuttingFunctions
 
     static List<Vector2> ComputeUVsFromVertices(List<Vector3> vertices, Plane plane) {
         //We remap vertices to a 2D plane, surprisingly the one wh ocut the mesh
-        List<Vector2> remappedVertices = ProjectPointsOntoPlane(plane, vertices);
+        List<Vector2> remappedVertices = ProjectVerticesOntoPlane(plane, vertices);
 
         //we try to find the bounding box by taking the max and min x and y values
         float xMax = float.MinValue;

@@ -322,6 +322,8 @@ MonoBehaviour:
   isFirstCut: 1
   matCut: {fileID: 2100000, guid: 9d5069c508d98ec4a8b8c6de7c12c990, type: 2}
   index: -1
+  xBound: {x: 0, y: 0}
+  yBound: {x: 0, y: 0}
 --- !u!54 &130187895
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -480,6 +482,8 @@ MonoBehaviour:
   isFirstCut: 1
   matCut: {fileID: 2100000, guid: 9d5069c508d98ec4a8b8c6de7c12c990, type: 2}
   index: -1
+  xBound: {x: 0, y: 0}
+  yBound: {x: 0, y: 0}
 --- !u!1 &655438547
 GameObject:
   m_ObjectHideFlags: 0
@@ -822,8 +826,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isFirstCut: 1
-  matCut: {fileID: 2100000, guid: 9d5069c508d98ec4a8b8c6de7c12c990, type: 2}
+  matCut: {fileID: 2100000, guid: c6691b1ef3c346d4cb05de880a40fae6, type: 2}
   index: -1
+  xBound: {x: 0, y: 0}
+  yBound: {x: 0, y: 0}
 --- !u!54 &928562518
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -892,7 +898,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 6d01234c7bde3a34686a0b5bdd2e01f5, type: 2}
+  - {fileID: 2100000, guid: d14745abd95a278429846b3400bcbeb8, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1374,6 +1380,8 @@ MonoBehaviour:
   isFirstCut: 1
   matCut: {fileID: 2100000, guid: 9d5069c508d98ec4a8b8c6de7c12c990, type: 2}
   index: -1
+  xBound: {x: 0, y: 0}
+  yBound: {x: 0, y: 0}
 --- !u!1 &1585259088
 GameObject:
   m_ObjectHideFlags: 0
@@ -1435,8 +1443,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isFirstCut: 1
-  matCut: {fileID: 2100000, guid: 9d5069c508d98ec4a8b8c6de7c12c990, type: 2}
+  matCut: {fileID: 2100000, guid: f3389e31ec541544f8b7f418b931f7ec, type: 2}
   index: -1
+  xBound: {x: 0, y: 0}
+  yBound: {x: 0, y: 0}
 --- !u!135 &1585259091
 SphereCollider:
   m_ObjectHideFlags: 0
