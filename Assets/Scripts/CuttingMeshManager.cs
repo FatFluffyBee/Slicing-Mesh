@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,7 @@ public class CuttingMeshManager : MonoBehaviour
 
     private List<IsCuttable> isCuttables = new List<IsCuttable>(); 
     private List<GameObject> originalGO = new List<GameObject>();
-    private List<List<MeshData>> allMeshesData = new List<List<MeshData>>();
+    private List<MeshData> [] allMeshesData = new List<MeshData>[0];
 
     [SerializeField] private bool processingCut;
     private int remainingProcess;
@@ -21,7 +22,7 @@ public class CuttingMeshManager : MonoBehaviour
 
     void Update() 
     {
-        if(remainingProcess == 0 && allMeshesData.Count > 0) {
+        if(remainingProcess == 0 && allMeshesData.Length > 0) {
             UpdateSliceMeshed();
         }
     }
@@ -68,14 +69,15 @@ public class CuttingMeshManager : MonoBehaviour
                 initMeshData.subMeshes[j] = meshes[i].GetTriangles(j).ToList();
 
             //Start threading for each individual meshes
-            threadManager.RequestMeshData(OnMeshesDataReceived, initMeshData, planes[i], isCuttables[i].index);
+            allMeshesData = new List<MeshData>[meshes.Count];
+            threadManager.RequestMeshData(OnMeshesDataReceived, initMeshData, planes[i], isCuttables[i].index, i);
         }
         processingCut = true;
         return true;
     }
 
     void UpdateSliceMeshed() { //! jitter when too many mesh are replaced at once, maybe wait that all mesh are created then activate all of them at once instead of one by one
-        for(int i = 0; i < allMeshesData.Count; i++) {
+        for(int i = 0; i < allMeshesData.Length; i++) {
             for(int j = 0; j < allMeshesData[i].Count; j++) {
                 Transform ogTransform = originalGO[i].transform;
                 //Set basic meshes info
@@ -115,14 +117,14 @@ public class CuttingMeshManager : MonoBehaviour
             //Destroy old mesh
             Destroy(originalGO[i]);
         }     
-        allMeshesData.Clear();
+        Array.Clear(allMeshesData, 0, allMeshesData.Length); //might be redundant
         isCuttables.Clear();
         originalGO.Clear();
         processingCut = false; 
     }
 
-    void OnMeshesDataReceived(List<MeshData> meshesData) {
-        allMeshesData.Add(meshesData);
+    void OnMeshesDataReceived(List<MeshData> meshesData, int index) {
+        allMeshesData[index] = meshesData;
         remainingProcess--;
     }
 }
