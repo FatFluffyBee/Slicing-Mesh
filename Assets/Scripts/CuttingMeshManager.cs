@@ -15,20 +15,17 @@ public class CuttingMeshManager : MonoBehaviour
     [SerializeField] private bool processingCut;
     private int remainingProcess;
 
-    void Awake ()
-    {
+    void Awake () {
         threadManager = FindObjectOfType<ThreadManager>();
     }
 
-    void Update() 
-    {
-        if(remainingProcess == 0 && allMeshesData.Length > 0) {
+    void Update() {
+        if(processingCut && remainingProcess == 0) {
             UpdateSliceMeshed();
         }
     }
 
-    public bool CutMesh(List<Plane> planes, List<Mesh> meshes, List<GameObject> gameObjects)
-    {
+    public bool CutMesh(List<Plane> planes, List<Mesh> meshes, List<GameObject> gameObjects) {
         if(processingCut) //if the previous cut is still being processed, cancel
             return false;
 
@@ -76,7 +73,7 @@ public class CuttingMeshManager : MonoBehaviour
         return true;
     }
 
-    void UpdateSliceMeshed() { //! jitter when too many mesh are replaced at once, maybe wait that all mesh are created then activate all of them at once instead of one by one
+    void UpdateSliceMeshed() {
         for(int i = 0; i < allMeshesData.Length; i++) {
             for(int j = 0; j < allMeshesData[i].Count; j++) {
                 Transform ogTransform = originalGO[i].transform;
@@ -114,6 +111,7 @@ public class CuttingMeshManager : MonoBehaviour
                 newIsCut.isFirstCut = false;
                 newIsCut.index = isCuttables[i].index;
             }
+
             //Destroy old mesh
             Destroy(originalGO[i]);
         }     

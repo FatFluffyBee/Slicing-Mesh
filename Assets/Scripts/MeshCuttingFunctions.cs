@@ -93,10 +93,10 @@ public static class MeshCuttingFunctions
             }
         }
             
-        /// Separare the list of all point of cut edge into their respective face group, if there is multiple different face group, AKA the mesh is not simple -> (  ) () 
+        // Separare the list of all point of cut edge into their respective face group, if there is multiple different face group, AKA the mesh is not simple -> (  ) () 
         List<List<Vector3>> verticesAlongPlaneConcave = RegroupPointsByFace(pointsAlongPlane, uvPointAlongPlane);
 
-        /// Calculate geometry for each set of faces
+        // Calculate geometry for each set of faces
         for (int index = 0; index < verticesAlongPlaneConcave.Count; index++) {
             pointsAlongPlane = verticesAlongPlaneConcave[index];
             //uvPointAlongPlane = uvPointsAlongPlaneConcave[index];
@@ -127,16 +127,17 @@ public static class MeshCuttingFunctions
             }
         }
 
+        //Compile mesh data for return
         List<List<MeshData>> allSeparatedMeshData = new List<List<MeshData>>() {};
         foreach(MeshData meshData in twoCutMeshesData) {
             allSeparatedMeshData.Add(SeparateMeshDataByLinkedTriangles(meshData)); 
         }
 
         List<MeshData> finalMeshList = new List<MeshData>();
-
         foreach(List<MeshData> list in allSeparatedMeshData) { 
             foreach(MeshData meshData in list) {
-                finalMeshList.Add(meshData);
+                MeshData cleanedMeshData = RemoveDuplicatesVertices(meshData);
+                finalMeshList.Add(cleanedMeshData);
             }
         }
 
@@ -158,60 +159,18 @@ public static class MeshCuttingFunctions
         return projectedPoints;
     }
 
-    static List<Vector2> ComputeUVsFromVertices(List<Vector3> vertices, Plane plane) {
-        //We remap vertices to a 2D plane, surprisingly the one wh ocut the mesh
-        List<Vector2> remappedVertices = ProjectVerticesOntoPlane(plane, vertices);
-
-        //we try to find the bounding box by taking the max and min x and y values
-        float xMax = float.MinValue;
-        float xMin = float.MaxValue;
-        float yMax = float.MinValue;
-        float yMin = float.MaxValue;
-
-        foreach(Vector2 v in remappedVertices) {
-            xMax = Mathf.Max(xMax, v.x);
-            xMin = Mathf.Min(xMin, v.x);
-            yMax = Mathf.Max(yMax, v.y);
-            yMin = Mathf.Min(yMin, v.y);
-        }
-
-        float xRange = xMax - xMin;
-        float yRange = yMax - yMin;
-
-        //we convert the bounding box into a square 
-        if(xRange < yRange) {
-            xMin -= (yRange - xRange) / 2;
-            xMax += (yRange - xRange) / 2;
-            xRange = yRange;
-        } else {
-            yMin -= (xRange - yRange) / 2;
-            yMax += (xRange - yRange) / 2;
-            yRange = xRange;
-        }
-
-        List<Vector2> uvs = new List<Vector2>();
-        foreach(Vector2 point in remappedVertices) {
-            float xUV = (point.x - xMin) / xRange; 
-            float yUV = (point.y - yMin) / yRange; 
-            uvs.Add(new Vector2(xUV, yUV));
-        }
-
-        return uvs;
-    }
-
-    static Vector3 ComputeNormal(Vector3 pointA, Vector3 pointB, Vector3 pointC)
-    {
+    static Vector3 ComputeNormal(Vector3 pointA, Vector3 pointB, Vector3 pointC){
         return Vector3.Cross(pointB - pointA, pointC - pointA).normalized;
     }
 
-    static List<MeshData> SeparateMeshDataByLinkedTriangles(MeshData meshData) //separate each mesh data into differents island depending on connectivity
-    {
+    //separate each mesh data into differents island depending on connectivity 
+    static List<MeshData> SeparateMeshDataByLinkedTriangles(MeshData meshData) { 
         List<MeshData> separatedMeshData = new List<MeshData>();
         int subMeshCount = meshData.subMeshes.Length;
 
         //Iterate for every set of triangles in meshData and add it to a new list of mesh data if linked to triangles in the list. If not create a new one. 
         //If present in more than one combine the list
-        for(int i = 0; i < subMeshCount; i++) 
+        for(int i = 0; i < subMeshCount; i++) {
             for(int j = 0; j < meshData.subMeshes[i].Count; j+=3) {
                 //get all three points of the triangles
                 Vector3 pointA = meshData.vertices[meshData.subMeshes[i][j]];
@@ -222,11 +181,11 @@ public static class MeshCuttingFunctions
                 int finalIndice = -1;
 
                 for(int x = 0; x < separatedMeshData.Count; x++) { //we check all the meshes data already created to see if the current triangle is linked to existing vertices
-                    int indexA = separatedMeshData[x].vertices.IndexOf(pointA);
-                    int indexB = separatedMeshData[x].vertices.IndexOf(pointB);
-                    int indexC = separatedMeshData[x].vertices.IndexOf(pointC);
+                    int indexPointA = separatedMeshData[x].vertices.IndexOf(pointA);
+                    int indexPointB = separatedMeshData[x].vertices.IndexOf(pointB);
+                    int indexPointC = separatedMeshData[x].vertices.IndexOf(pointC);
 
-                    if(indexA != -1 || indexB != -1 || indexC != -1) {
+                    if(indexPointA != -1 || indexPointB != -1 || indexPointC != -1) {
                         indicesSeenInTab.Add(x);
                     }
                 }
@@ -263,59 +222,94 @@ public static class MeshCuttingFunctions
                     finalIndice = separatedMeshData.Count - 1;
                 }
 
-                int triIndexA = meshData.subMeshes[i][j];
-                int triIndexB = meshData.subMeshes[i][j+1];
-                int triIndexC = meshData.subMeshes[i][j+2];
-                int lastTriangleIndex = separatedMeshData[finalIndice].vertices.Count;
+                if(true) {
+                    int triIndexA = meshData.subMeshes[i][j];
+                    int triIndexB = meshData.subMeshes[i][j+1];
+                    int triIndexC = meshData.subMeshes[i][j+2];
+                    int lastTriangleIndex = separatedMeshData[finalIndice].vertices.Count;
 
-                separatedMeshData[finalIndice].vertices.Add(pointA);
-                separatedMeshData[finalIndice].vertices.Add(pointB);
-                separatedMeshData[finalIndice].vertices.Add(pointC);
+                    separatedMeshData[finalIndice].vertices.Add(pointA);
+                    separatedMeshData[finalIndice].vertices.Add(pointB);
+                    separatedMeshData[finalIndice].vertices.Add(pointC);
 
-                separatedMeshData[finalIndice].uvs.Add(meshData.uvs[triIndexA]);
-                separatedMeshData[finalIndice].uvs.Add(meshData.uvs[triIndexB]);
-                separatedMeshData[finalIndice].uvs.Add(meshData.uvs[triIndexC]);
+                    separatedMeshData[finalIndice].uvs.Add(meshData.uvs[triIndexA]);
+                    separatedMeshData[finalIndice].uvs.Add(meshData.uvs[triIndexB]);
+                    separatedMeshData[finalIndice].uvs.Add(meshData.uvs[triIndexC]);
 
-                separatedMeshData[finalIndice].subMeshes[i].Add(lastTriangleIndex);
-                separatedMeshData[finalIndice].subMeshes[i].Add(lastTriangleIndex+1);
-                separatedMeshData[finalIndice].subMeshes[i].Add(lastTriangleIndex+2);
+                    separatedMeshData[finalIndice].subMeshes[i].Add(lastTriangleIndex);
+                    separatedMeshData[finalIndice].subMeshes[i].Add(lastTriangleIndex+1);
+                    separatedMeshData[finalIndice].subMeshes[i].Add(lastTriangleIndex+2);
+                } else {
+                    int triIndexA = meshData.subMeshes[i][j];  
+                    int indexA = separatedMeshData[finalIndice].vertices.IndexOf(pointA);
+                    if(indexA == -1) {
+                        separatedMeshData[finalIndice].vertices.Add(pointA);
+                        separatedMeshData[finalIndice].uvs.Add(meshData.uvs[triIndexA]);
+                        separatedMeshData[finalIndice].subMeshes[i].Add(separatedMeshData[finalIndice].vertices.Count-1);
+                    } else {
+                        separatedMeshData[finalIndice].subMeshes[i].Add(indexA);
+                    }
+                    
+                    int triIndexB = meshData.subMeshes[i][j+1];  
+                    int indexB = separatedMeshData[finalIndice].vertices.IndexOf(pointB);
+                    if(indexB == -1) {
+                        separatedMeshData[finalIndice].vertices.Add(pointB);
+                        separatedMeshData[finalIndice].uvs.Add(meshData.uvs[triIndexB]);
+                        separatedMeshData[finalIndice].subMeshes[i].Add(separatedMeshData[finalIndice].vertices.Count-1);
+                    } else {
+                        separatedMeshData[finalIndice].subMeshes[i].Add(indexB);
+                    }
+
+                    int triIndexC = meshData.subMeshes[i][j+2];  
+                    int indexC = separatedMeshData[finalIndice].vertices.IndexOf(pointC);
+                    if(indexC == -1) {
+                        separatedMeshData[finalIndice].vertices.Add(pointC);
+                        separatedMeshData[finalIndice].uvs.Add(meshData.uvs[triIndexC]);
+                        separatedMeshData[finalIndice].subMeshes[i].Add(separatedMeshData[finalIndice].vertices.Count-1);
+                    } else {
+                        separatedMeshData[finalIndice].subMeshes[i].Add(indexC);
+                    }
+                }
+            }
         }
 
         return separatedMeshData;
     }
+    
+    // ajouter face à un MeshData 
     static void AddTrianglesToMesh(ref List<MeshData> finalMeshesData, Vector3 pointA, Vector2 uv0, Vector3 pointB, Vector2 uv1, Vector3 pointC, 
-    Vector2 uv2, MeshSide side, int subMeshIndex, int subMeshCount) // ajouter face à un MeshData 
-    {
+        Vector2 uv2, MeshSide side, int subMeshIndex, int subMeshCount) {
+        
         int indexSide = Convert.ToInt32(side);
-        //todo here is a good place to remove flat shading, maybe with an added parameter to know if duplicate vertices or check for existing one
-        /*if(false) {
-            int indexA = finalMeshesData.vertices.IndexOf(pointA);
+        //todo check to reduce vertices probably here and make a list of common vertices not for each subamesh but one meshdata
+        if(false) {
+            int indexA = finalMeshesData[indexSide].vertices.IndexOf(pointA);
             if(indexA == -1) {
-                finalMeshesData.vertices.Add(pointA);
-                finalMeshesData.uvs.Add(uv0);
-                finalMeshesData.subMeshes[subMeshIndex].Add(finalMeshesData.vertices.Count -1);
+                finalMeshesData[indexSide].vertices.Add(pointA);
+                finalMeshesData[indexSide].uvs.Add(uv0);
+                finalMeshesData[indexSide].subMeshes[subMeshIndex].Add(finalMeshesData[indexSide].vertices.Count -1);
             } else {
-                finalMeshesData.subMeshes[subMeshIndex].Add(indexA);
+                finalMeshesData[indexSide].subMeshes[subMeshIndex].Add(indexA);
             }
 
-            int indexB = finalMeshesData.vertices.IndexOf(pointB);
+            int indexB = finalMeshesData[indexSide].vertices.IndexOf(pointB);
             if(indexB == -1) {
-                finalMeshesData.vertices.Add(pointB);
-                finalMeshesData.uvs.Add(uv1);
-                finalMeshesData.subMeshes[subMeshIndex].Add(finalMeshesData.vertices.Count -1);
+                finalMeshesData[indexSide].vertices.Add(pointB);
+                finalMeshesData[indexSide].uvs.Add(uv1);
+                finalMeshesData[indexSide].subMeshes[subMeshIndex].Add(finalMeshesData[indexSide].vertices.Count -1);
             } else {
-                finalMeshesData.subMeshes[subMeshIndex].Add(indexB);
+                finalMeshesData[indexSide].subMeshes[subMeshIndex].Add(indexB);
             }
 
-            int indexC = finalMeshesData.vertices.IndexOf(pointC);
+            int indexC = finalMeshesData[indexSide].vertices.IndexOf(pointC);
             if(indexC == -1) {
-                finalMeshesData.vertices.Add(pointC);
-                finalMeshesData.uvs.Add(uv2);
-                finalMeshesData.subMeshes[subMeshIndex].Add(finalMeshesData.vertices.Count -1);
+                finalMeshesData[indexSide].vertices.Add(pointC);
+                finalMeshesData[indexSide].uvs.Add(uv2);
+                finalMeshesData[indexSide].subMeshes[subMeshIndex].Add(finalMeshesData[indexSide].vertices.Count -1);
             } else {
-                finalMeshesData.subMeshes[subMeshIndex].Add(indexC);
+                finalMeshesData[indexSide].subMeshes[subMeshIndex].Add(indexC);
             }
-        } else {*/
+        } else {
             int subMeshTriangleIndex = finalMeshesData[indexSide].vertices.Count;
 
             finalMeshesData[indexSide].vertices.Add(pointA);
@@ -329,11 +323,11 @@ public static class MeshCuttingFunctions
             finalMeshesData[indexSide].vertices.Add(pointC);
             finalMeshesData[indexSide].uvs.Add(uv2);
             finalMeshesData[indexSide].subMeshes[subMeshIndex].Add(subMeshTriangleIndex + 2);
-        //}
+        }
     }
 
-    static void CalculateIntersectionPointAndUvs(out Vector3 interPoint, out Vector2 uvPoint, Plane plane, Vector3 pointA, Vector2 uvA, 
-    Vector3 pointB, Vector2 uvB) { //Calculate the intersection point of the plane and a segment AB, return the point and uvs
+    //Calculate the intersection point of the plane and a segment AB, return the point and uvs
+    static void CalculateIntersectionPointAndUvs(out Vector3 interPoint, out Vector2 uvPoint, Plane plane, Vector3 pointA, Vector2 uvA, Vector3 pointB, Vector2 uvB) { 
         Ray ray = new Ray(pointA, pointB - pointA);
         plane.Raycast(ray, out float distance);
 
@@ -342,7 +336,8 @@ public static class MeshCuttingFunctions
         uvPoint = uvA + (uvB - uvA) * ratio;
     }
 
-    static List<List<Vector3>> RegroupPointsByFace(List<Vector3> verticesList, List<Vector2> uvList/*, out List<List<Vector2>> finalUvList*/) {//sépare les points appartennant aux mêmes faces dans des liste séparées
+    //sépare les points appartennant aux mêmes faces dans des liste séparées
+    static List<List<Vector3>> RegroupPointsByFace(List<Vector3> verticesList, List<Vector2> uvList/*, out List<List<Vector2>> finalUvList*/) {
         if(verticesList.Count== 0)
             Debug.LogError("List of face is empty, the mesh is not supposed to be cut by the plane");
 
@@ -396,8 +391,91 @@ public static class MeshCuttingFunctions
         return verticesAlongPlaneConcave;
     }
 
-    public static bool CompareVector(Vector3 pointA, Vector3 pointB, float roundingError){
-        return (pointA - pointB).magnitude < roundingError;
+    //remap vertices on the newly created face
+    static List<Vector2> ComputeUVsFromVertices(List<Vector3> vertices, Plane plane) {
+        //We remap vertices to a 2D plane, surprisingly the one wh ocut the mesh
+        List<Vector2> remappedVertices = ProjectVerticesOntoPlane(plane, vertices);
+
+        //we try to find the bounding box by taking the max and min x and y values
+        float xMax = float.MinValue;
+        float xMin = float.MaxValue;
+        float yMax = float.MinValue;
+        float yMin = float.MaxValue;
+
+        foreach(Vector2 v in remappedVertices) {
+            xMax = Mathf.Max(xMax, v.x);
+            xMin = Mathf.Min(xMin, v.x);
+            yMax = Mathf.Max(yMax, v.y);
+            yMin = Mathf.Min(yMin, v.y);
+        }
+
+        float xRange = xMax - xMin;
+        float yRange = yMax - yMin;
+
+        //we convert the bounding box into a square 
+        if(xRange < yRange) {
+            xMin -= (yRange - xRange) / 2;
+            xMax += (yRange - xRange) / 2;
+            xRange = yRange;
+        } else {
+            yMin -= (xRange - yRange) / 2;
+            yMax += (xRange - yRange) / 2;
+            yRange = xRange;
+        }
+
+        List<Vector2> uvs = new List<Vector2>();
+        foreach(Vector2 point in remappedVertices) {
+            float xUV = (point.x - xMin) / xRange; 
+            float yUV = (point.y - yMin) / yRange; 
+            uvs.Add(new Vector2(xUV, yUV));
+        }
+
+        return uvs;
+    }
+
+    //remove duplicate vertices at the end //is not very efficient but might be necessary to avoid 1000+ vertices on small pieces without check at every steps
+    static MeshData RemoveDuplicatesVertices(MeshData meshData) {
+        
+        var vert = meshData.vertices;
+        var uvs = meshData.uvs;
+        var subMs = meshData.subMeshes;
+        List<Vector2Int> duplicateIndex = new List<Vector2Int>(); // (duplicate, first iteration)
+
+        //iterate through vertices and uvs and report any correspondance
+        for(int i = 0; i < vert.Count-1; i++) {
+            for(int j = i+1; j < vert.Count; j++) {
+                if(vert[i] == vert[j]) {
+                    if(uvs[i] == uvs[j]) {
+                        duplicateIndex.Add(new Vector2Int(j, i));
+                        break;
+                    }
+                }
+            }
+        }
+
+        duplicateIndex = duplicateIndex.OrderBy(duplicateIndex => duplicateIndex.x).ToList();
+
+        //with the correspondance tables, supress duplicate vertices / uvs and change triangle value
+        //foreach duplicate index line, supress vertices in question and decrement every triangles above value by 1
+        for(int i = duplicateIndex.Count-1; i >= 0; i--) {
+            Vector2Int key = duplicateIndex[i];
+            vert.RemoveAt(key.x);
+            uvs.RemoveAt(key.x);
+
+            foreach(var triangles in subMs) {
+                for(int j = 0; j < triangles.Count; j++) {
+                    if(triangles[j] == key.x) triangles[j] = key.y;
+                    else if(triangles[j] > key.x) triangles[j]--;
+                }
+            }
+        }
+
+        //return lighter meshdata
+        MeshData copy = new MeshData(meshData.subMeshCount);
+        copy.vertices = vert;
+        copy.uvs = uvs;
+        copy.subMeshes = subMs;
+        return copy;
     }
 }
 
@@ -406,9 +484,11 @@ public class MeshData
     public List<Vector3> vertices;
     public List<Vector2> uvs;
     public List<int> [] subMeshes;
+    public int subMeshCount;
 
     public MeshData(int subMeshCount)
     {
+        this.subMeshCount = subMeshCount;
         vertices = new List<Vector3>();
         uvs = new List<Vector2>();
 
